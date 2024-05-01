@@ -23,3 +23,4 @@ rootProject.name = "JAG"
 include(":app")
 include(":demo")
 include(":library")
+include(":javademo")

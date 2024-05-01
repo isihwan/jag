@@ -8,6 +8,9 @@
       <entry key="demo">
         <State />
       </entry>
+      <entry key="javademo">
+        <State />
+      </entry>
     </value>
   </component>
 </project>

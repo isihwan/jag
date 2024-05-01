@@ -1,19 +1,27 @@
 package org.sean.kim.jag.demo
 
 import android.os.Bundle
-import android.os.Environment
 import android.view.KeyEvent
-import androidx.activity.enableEdgeToEdge
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import kotlinx.coroutines.selects.select
-import java.io.File
+import org.sean.kim.jag.C
+import org.sean.kim.jag.Jag
+import org.sean.kim.jag.util.Blocking
+import org.sean.kim.jag.util.Logger
 
 class MainActivity : AppCompatActivity() {
+    private val logger: Logger = Logger(C.TAG, "Demo")
+    private lateinit var jag: Jag
+    private lateinit var button1: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        jag = Jag(this)
+        button1 = this.findViewById(R.id.button1)
+        button1.setOnClickListener {
+            test0()
+        }
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
@@ -31,23 +39,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun test0() {
-        val success = fileBlockingExecution()
+        jag.request { Blocking.fileBlockingLongExecution(this) }.let {
+            it.get(false).let {
+                logger.d("test0", "result: $it")
+                if (it) button1.text = "Success"
+                else button1.text = "Failed"
+            }
+        }
     }
 
-    private fun fileBlockingExecution(): Boolean {
-        var dir = getFilesDir()
-        if (dir != null) {
-            val file = File(dir, "test.txt")
-            if (file.exists()) {
-                return file.delete()
-            }
-            var out = file.outputStream()
-            for (i in 0..50000) {
-                out.write("Hello, World!\n".toByteArray())
-                Thread.sleep(1000)
-            }
-            return true
-        }
-        return false
-    }
 }

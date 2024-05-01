@@ -1,14 +1,13 @@
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
 }
 
 android {
-    namespace = "org.sean.kim.jag.demo"
+    namespace = "kr.sean.javademo"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "org.sean.kim.jag.demo"
+        applicationId = "kr.sean.javademo"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -27,21 +26,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation("com.github.anrwatchdog:anrwatchdog:1.4.0")
     implementation(project(":library"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
