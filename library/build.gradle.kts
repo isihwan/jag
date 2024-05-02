@@ -15,7 +15,7 @@ fun String.runCommand(currentWorkingDir: File = file("./")): String {
     return String(byteOut.toByteArray()).trim()
 }
 
-val gitBranch = "git branch --show-current".runCommand()
+val gitBranch = "git rev-parse --abbrev-ref HEAD".runCommand()
 val gitSha = "git rev-parse --short HEAD".runCommand()
 val getRevisionCount = Integer.parseInt("git rev-list --count HEAD".runCommand())
 

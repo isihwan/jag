@@ -7,7 +7,10 @@ import android.os.Message;
 
 import androidx.annotation.NonNull;
 
+import org.sean.kim.jag.util.Logger;
+
 public class JagDefaultWatchDog implements WatchDog {
+    private final Logger logger = new Logger(C.TAG, "JagWatchDog");
     private final int watchInterval;
     private final Handler handler;
     private Thread.State state = Thread.State.NEW;
@@ -16,7 +19,7 @@ public class JagDefaultWatchDog implements WatchDog {
 
     public JagDefaultWatchDog(int watchInterval) {
         this.watchInterval = watchInterval;
-        HandlerThread handlerThread = new HandlerThread("JagDefaultWatchDog");
+        HandlerThread handlerThread = new HandlerThread("JagDefaultWatchDog", Thread.NORM_PRIORITY+1);
         handlerThread.start();
         this.handler = new AnrCheckHandler(handlerThread.getLooper());
     }
@@ -35,7 +38,7 @@ public class JagDefaultWatchDog implements WatchDog {
     @Override
     public void start() {
         state = Thread.State.RUNNABLE;
-        handler.sendEmptyMessage(AnrCheckHandler.WHAT_START);
+        handler.sendEmptyMessage(AnrCheckHandler.WHAT_CHECK);
     }
 
     @Override
@@ -46,8 +49,11 @@ public class JagDefaultWatchDog implements WatchDog {
     private class AnrCheckHandler extends Handler {
         public static final int WHAT_START = 0;
         public static final int WHAT_INTERVAL = 1;
+        public static final int WHAT_CHECK = 2;
+        private final long LOOP_INTERVAL = 1000;
         private volatile long _tick;
         private long interval;
+        private long intervalStart;
 
         public AnrCheckHandler(Looper looper) {
             super(looper);
@@ -57,15 +63,41 @@ public class JagDefaultWatchDog implements WatchDog {
         @Override
         public void handleMessage(@NonNull Message msg) {
             switch (msg.what) {
+                case WHAT_CHECK:
+                    //logger.v("WHAT_CHECK");
+                    long now = System.currentTimeMillis();
+                    sendEmptyMessageDelayed(WHAT_CHECK, LOOP_INTERVAL);
+                    if (_tick <= 0) {
+                        //logger.v("post _ticker");
+                        _uiHandler.post(this::_ticker);
+                        intervalStart = now;
+                        _tick = interval;
+                    } else {
+                        if (now - intervalStart > (watchInterval - LOOP_INTERVAL)) {
+                            if (anrInterceptor != null) {
+                                interval = anrInterceptor.intercept(_tick);
+                                if (interval > 0) {
+                                    _tick = 0;
+                                    break;
+                                }
+                            }
+
+                            throw JagAnrError.NewMainOnly(_tick);
+                        }
+                    }
+                    break;
                 case WHAT_START:
                     boolean needPost = _tick == 0;
                     _tick = interval;
+                    logger.v("send WHAT_INTERVAL");
+                    sendEmptyMessageDelayed(WHAT_INTERVAL, LOOP_INTERVAL);
                     if (needPost) {
                         _uiHandler.post(this::_ticker);
                     }
-                    sendEmptyMessageDelayed(WHAT_INTERVAL, interval);
+                    intervalStart = System.currentTimeMillis();
                     break;
                 case WHAT_INTERVAL:
+                    logger.v("WHAT_INTERVAL");
                     if (_tick != 0) {
                         if (anrInterceptor != null) {
                             interval = anrInterceptor.intercept(_tick);
@@ -75,7 +107,7 @@ public class JagDefaultWatchDog implements WatchDog {
                             }
                         }
 
-                        throw JagAnrError.NewMainOnly(_tick);
+                        //throw JagAnrError.NewMainOnly(_tick);
                     } else {
                         interval = watchInterval;
                     }

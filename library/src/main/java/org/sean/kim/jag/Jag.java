@@ -20,8 +20,7 @@ public final class Jag {
     private final JagAnrInterceptor jagAnrInterceptor;
 
     public Jag(@NonNull Context context) {
-        //this(context, new ANRWatchDog());
-        this(context, new JagDefaultWatchDog(4500));
+        this(context, new JagDefaultWatchDog(5000));
     }
 
     public Jag(@NonNull Context context, @NonNull Object watchDog) {
@@ -44,10 +43,10 @@ public final class Jag {
     }
 
     public<T> @NonNull JagResult<T> request(@NonNull JagJob<T> job) {
-        return request(job, true);
+        return request(job, null);
     }
 
-    public<T> @NonNull JagResult<T> request(@NonNull JagJob<T> job, boolean keepGoingJob) {
-        return new JagResult<>(job, mainHandler, jagAnrInterceptor, keepGoingJob);
+    public<T> @NonNull JagResult<T> request(@NonNull JagJob<T> job, Handler workerHandler) {
+        return new JagResult<>(job, mainHandler, jagAnrInterceptor, workerHandler);
     }
 }

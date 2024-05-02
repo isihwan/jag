@@ -14,7 +14,7 @@ public class JagAnrInterceptor implements ANRWatchDog.ANRInterceptor {
         }
         if (waitLists.size() > 0) {
             waitLists.clear();
-            return 50;
+            return duration;
         }
         return 0;
     }

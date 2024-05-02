@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         HandlerThread th = new HandlerThread("JagWatchDog");
         th.start();
         jag = new Jag(this);
-        //jag = new Jag(this, new ANRWatchDog(4500));
+        //jag = new Jag(this, new ANRWatchDog(2500));
         //jag = new Jag(this, new JagDefaultWatchDog(4500));
         button1 = findViewById(R.id.button1);
         button1.setOnClickListener(new View.OnClickListener() {
@@ -70,12 +70,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void test0() {
         JagResult<Boolean> result = jag.request(()->Blocking.fileBlockingLongExecution(this));
+        button1.setText("Trying...");
         if (result.get(false)) button1.setText("Success");
         else button1.setText("Failed");
     }
 
     private void test1() {
         JagResult<Boolean> result = jag.request(()->Blocking.fileBlockingLongExecution(this));
+        button2.setText("Trying...");
         result.onComplete((Boolean success)->{
             logger.i("test1: %s", success ? "Success" : "Failed");
             button2.setText(success ? "Success" : "Failed");
@@ -91,6 +93,10 @@ public class MainActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void test3() {
+        JagResult<Boolean> result = jag.request(()->Blocking.fileBlockingLongExecution(this));
     }
 
 }

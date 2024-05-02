@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.sean.kim.jag.util.Logger;
 
@@ -16,17 +17,21 @@ public class JagResult<T> implements Cancellable {
     private final Handler callbackHandler;
     private final JagAnrInterceptor jagAnrInterceptor;
     private final AtomicFuture<T> future;
-    private final WorkThread workThread;
-    private final boolean keepGoingJob;
+    @Nullable private final Thread workThread;
 
-    public JagResult(@NonNull JagJob<T> job, Handler callbackHandler, JagAnrInterceptor jagAnrInterceptor, boolean keepGoingJob) {
+    public JagResult(@NonNull JagJob<T> job, Handler callbackHandler, JagAnrInterceptor jagAnrInterceptor, @Nullable Handler workerHandler) {
         this.job = job;
         this.callbackHandler = callbackHandler;
         this.jagAnrInterceptor = jagAnrInterceptor;
-        this.keepGoingJob = keepGoingJob;
         future = new AtomicFuture<>();
-        workThread = new WorkThread(job, future);
-        workThread.start();
+        Worker worker = new Worker(job, future);
+        if (workerHandler != null) {
+            workerHandler.post(worker);
+            workThread = null;
+        } else {
+            workThread = new Thread(worker);
+            workThread.start();
+        }
     }
 
     public @NonNull T get(@NonNull T defaultValue){
@@ -55,18 +60,18 @@ public class JagResult<T> implements Cancellable {
     @Override
     public void cancel() {
         logger.w("cancel");
-        if (!keepGoingJob && workThread.isAlive()) {
+        if (workThread != null && workThread.isAlive()) {
             if (logger.isEnableV()) logger.v("workThread.interrupt()");
             workThread.interrupt();
         }
         future.cancel(true);
     }
 
-    private class WorkThread extends Thread {
+    private class Worker implements Runnable {
         private final JagJob<T> job;
         private final AtomicFuture<T> future;
 
-        public WorkThread(JagJob<T> job, AtomicFuture<T> future) {
+        public Worker(JagJob<T> job, AtomicFuture<T> future) {
             this.job = job;
             this.future = future;
         }

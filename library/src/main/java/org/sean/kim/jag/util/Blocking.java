@@ -16,9 +16,9 @@ public class Blocking {
         if (dir != null) {
             File file = new File(dir, "test.txt");
             for (int i = 0; i < 15; i++) {
-                FileOutputStream out = new FileOutputStream(file);
-                out.write("Hello\n".getBytes());
-                out.close();
+//                FileOutputStream out = new FileOutputStream(file);
+//                out.write("Hello\n".getBytes());
+//                out.close();
                 Thread.sleep(1000);
             }
             logger.i("fileBlockingExecution done");
